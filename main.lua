@@ -1,6 +1,8 @@
 function love.load()
     wf = require 'libraries/windfield/windfield'
     world = wf.newWorld(0, 1000, false) -- gravity x and y
+    world:setQueryDebugDrawing(true)
+
 
     world:addCollisionClass('Platform')
     world:addCollisionClass('Player'--[[,{ignores = {'Platform'}}]])
@@ -36,7 +38,6 @@ function love.update(dt)
             player:destroy()
         end
     end
-
 end
 
 function love.draw()
@@ -45,7 +46,20 @@ end
 
 function love.keypressed(key)
     if key == 'up' then
-        player:applyLinearImpulse(0,-7000)
+        -- 創造一個collider在底部
+        local colliders = world:queryRectangleArea(player:getX() - 40, player:getY() + 40, 80, 2, {'Platform'})
+        -- 如果collider存在，表示player與platform有接觸，才能跳躍
+        if #colliders > 0 then
+            player:applyLinearImpulse(0,-7000)
+        end
     end
-    
+end
+
+function love.mousepressed(x,y,button)
+    if button == 1 then
+        local colliders = world:queryCircleArea(x,y,200,{'Platform',"Danger"})
+        for i,c in ipairs(colliders) do
+            c:destroy()
+        end
+    end
 end
