@@ -1,23 +1,42 @@
 function love.load()
     wf = require 'libraries/windfield/windfield'
-    world = wf.newWorld(0, 1000) -- gravity x and y
+    world = wf.newWorld(0, 1000, false) -- gravity x and y
+
+    world:addCollisionClass('Platform')
+    world:addCollisionClass('Player'--[[,{ignores = {'Platform'}}]])
+
+    world:addCollisionClass('Danger')
+
     -- Collider is a table, so we can give it property
-    player = world:newRectangleCollider(360,100,80,80)
+    player = world:newRectangleCollider(360,100,80,80,{collision_class = "Player"})
+    player:setFixedRotation(true)
     player.speed = 300
-    platform = world:newRectangleCollider(250,400,300,100)
+
+    platform = world:newRectangleCollider(250,400,300,100, {collision_class = "Platform"})
     platform:setType('static')
+
+    dangerZone = world:newRectangleCollider(0,550,800,50, {collision_class = "Danger"})
+    dangerZone:setType('static')
+
 end
 
 function love.update(dt)
     world:update(dt)
 
-    local px, py = player:getPosition()
-    if love.keyboard.isDown('right') then
-        player:setX(px+player.speed * dt)
+    if player.body then -- player body still exist
+        local px, py = player:getPosition()
+        if love.keyboard.isDown('right') then
+            player:setX(px+player.speed * dt)
+        end
+        if love.keyboard.isDown('left') then
+            player:setX(px-player.speed * dt)
+        end
+
+        if player:enter('Danger') then
+            player:destroy()
+        end
     end
-    if love.keyboard.isDown('left') then
-        player:setX(px-player.speed * dt)
-    end
+
 end
 
 function love.draw()
