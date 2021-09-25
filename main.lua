@@ -30,6 +30,7 @@ function love.load()
     player.animation = animations.idle
     player.isMoving = false
     player.direction = 1
+    player.grounded = true
     platform = world:newRectangleCollider(250,400,300,100, {collision_class = "Platform"})
     platform:setType('static')
 
@@ -42,6 +43,12 @@ function love.update(dt)
     world:update(dt)
 
     if player.body then -- player body still exist
+        local colliders = world:queryRectangleArea(player:getX()-20, player:getY()+50, 40, 2, {'Platform'})
+        if #colliders > 0 then
+            player.grounded = true
+        else
+            player.grounded = false
+        end
         player.isMoving = false
         local px, py = player:getPosition()
 
@@ -61,11 +68,14 @@ function love.update(dt)
             player:destroy()
         end
     end
-
-    if player.isMoving == true then
-        player.animation = animations.run
+    if player.grounded then
+        if player.isMoving == true then
+            player.animation = animations.run
+        else
+            player.animation = animations.idle
+        end
     else
-        player.animation = animations.idle
+        player.animation = animations.jump
     end
     player.animation:update(dt)
 end
@@ -80,11 +90,12 @@ end
 function love.keypressed(key)
     if key == 'up' then
         -- 創造一個collider在底部
-        local colliders = world:queryRectangleArea(player:getX()-20, player:getY()+50, 40, 2, {'Platform'})
+        -- local colliders = world:queryRectangleArea(player:getX()-20, player:getY()+50, 40, 2, {'Platform'})
         -- 如果collider存在，表示player與platform有接觸，才能跳躍
-        if #colliders > 0 then
+        if player.grounded then
             player:applyLinearImpulse(0,-4000)
         end
+
     end
 end
 
